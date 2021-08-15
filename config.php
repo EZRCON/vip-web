@@ -49,7 +49,7 @@ try {
 
 
 // Setup:
-$setup = false;
+$setup = true;
 
 if ($setup) {
     $db->query('SET character_set_client = utf8');
