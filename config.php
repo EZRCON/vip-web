@@ -49,7 +49,7 @@ try {
 
 
 // Setup:
-$setup = true;
+$setup = $_GET['setup'] == 1;
 
 if ($setup) {
     $db->query('SET character_set_client = utf8');
@@ -89,7 +89,7 @@ if ($setup) {
     $pw = 'admin';
     $salt = base64_decode($_SERVER['APP_KEY']);
     $pwadd = md5($pw . $salt);
-    $sql = "INSERT IGNORE INTO  `vsm_tUser` (email, password, salt, rights)
+    $sql = "INSERT IGNORE INTO  vsm_tUser (email, password, salt, rights)
 			VALUES ('admin', '" . $pwadd . "', '" . $salt . "', 0);";
 
     $db->execute($sql);
