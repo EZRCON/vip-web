@@ -51,13 +51,12 @@ try {
 // Setup:
 $setup = false;
 
-
 if ($setup) {
     $db->query('SET character_set_client = utf8');
     $db->query('SET character_set_results = utf8');
     $db->query('SET character_set_connection = utf8');
 
-    $sql = "CREATE TABLE <tablename> ("
+    $sql = "CREATE TABLE IF NOT EXISTS <tablename> ("
         . "id INT NOT NULL auto_increment,"
         . "sessionID VARCHAR(250) NOT NULL,"
         . "time INT NOT NULL,"
@@ -68,18 +67,18 @@ if ($setup) {
         . "PRIMARY KEY (id));";
     createTable($db, "vsm_tBrowserSessions", $sql);
 
-    $sql = "CREATE TABLE <tablename> ("
+    $sql = "CREATE TABLE IF NOT EXISTS <tablename> ("
         . "id int NOT NULL auto_increment,"
         . "sessionID varchar(250),"
         . "email varchar(100),"
         . "password varchar(40),"
         . "passwordDummy varchar(20),"
-        . "salt VARCHAR(5),"
+        . "salt VARCHAR(1000),"
         . "rights INT(0),"   // 0: admin, 1: leader, 2: view only
         . "PRIMARY KEY (id));";
     createTable($db, "vsm_tUser", $sql);
 
-    $sql = "CREATE TABLE <tablename> ("
+    $sql = "CREATE TABLE IF NOT EXISTS <tablename> ("
         . "id int NOT NULL auto_increment,"
         . "userID INT,"
         . "server varchar(10),"
@@ -90,7 +89,7 @@ if ($setup) {
     $pw = 'admin';
     $salt = base64_decode($_SERVER['APP_KEY']);
     $pwadd = md5($pw . $salt);
-    $sql = "INSERT INTO vsm_tUser (email, password, salt, rights)
+    $sql = "INSERT IGNORE INTO  `vsm_tUser` (email, password, salt, rights)
 			VALUES ('admin', '" . $pwadd . "', '" . $salt . "', 0);";
 
     $db->execute($sql);
