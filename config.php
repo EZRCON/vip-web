@@ -17,7 +17,7 @@ if (file_exists(__DIR__ . '/../../vendor/autoload.php')) {
 // SETTINGS - SQL LOGIN DETAILS:
 
 $settings['server'] = $_SERVER['DB_HOST'];
-$settings['port'] = $_SERVER['DB_PORT'];
+$settings['port'] = isset($_SERVER['DB_PORT']) ? $_SERVER['DB_PORT'] : 3306;
 $settings['dbName'] = $_SERVER['DB_DATABASE'];
 $settings['dbUser'] = $_SERVER['DB_USERNAME'];
 $settings['dbPW'] = $_SERVER['DB_PASSWORD'];
