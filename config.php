@@ -5,7 +5,6 @@
 //error_reporting(E_ALL);
 
 
-
 // SETTINGS - SQL LOGIN DETAILS:
 
 $settings['server'] = $_SERVER['DB_HOST'];
@@ -18,7 +17,7 @@ $settings['dbPW'] = $_SERVER['DB_PASSWORD'];
 
 error_reporting(E_ERROR | E_PARSE);
 
-$settings['title'] = 'VIP Slot Manager';
+$settings['title'] = 'VIP Slot Manager ' . $_SERVER['APP_NAME'];
 $settings['jsAdd'] = '';
 $settings['left'] = '';
 
@@ -33,9 +32,10 @@ include('classMySQL.php');
 
 
 try {
-	$db = new TMySql($settings['server'], $settings['dbName'],
-		$settings['dbUser'], $settings['dbPW']);
+    $db = new TMySql($settings['server'], $settings['dbName'],
+        $settings['dbUser'], $settings['dbPW'], $settings['port']);
 } catch (EMySql $e) {
+    die($e->getMessage());
 }
 
 
@@ -44,79 +44,73 @@ $setup = false;
 
 
 if ($setup) {
-	$db->query('SET character_set_client = utf8');
-	$db->query('SET character_set_results = utf8');
-	$db->query('SET character_set_connection = utf8');
+    $db->query('SET character_set_client = utf8');
+    $db->query('SET character_set_results = utf8');
+    $db->query('SET character_set_connection = utf8');
 
-	$sql = "CREATE TABLE <tablename> ("
-			."id INT NOT NULL auto_increment,"
-			."sessionID VARCHAR(250) NOT NULL,"
-			."time INT NOT NULL,"
-			."lockedUntil INT NOT NULL,"
-			."error VARCHAR(300),"
-			."userID INT,"
-			."tSessionID INT,"
-			."PRIMARY KEY (id));";
-	createTable($db, "vsm_tBrowserSessions", $sql);
+    $sql = "CREATE TABLE <tablename> ("
+        . "id INT NOT NULL auto_increment,"
+        . "sessionID VARCHAR(250) NOT NULL,"
+        . "time INT NOT NULL,"
+        . "lockedUntil INT NOT NULL,"
+        . "error VARCHAR(300),"
+        . "userID INT,"
+        . "tSessionID INT,"
+        . "PRIMARY KEY (id));";
+    createTable($db, "vsm_tBrowserSessions", $sql);
 
-	$sql = "CREATE TABLE <tablename> ("
-			."id int NOT NULL auto_increment,"
-			."sessionID varchar(250),"
-			."email varchar(100),"
-			."password varchar(40),"
-			."passwordDummy varchar(20),"
-			."salt VARCHAR(5),"
-			."rights INT(0),"   // 0: admin, 1: leader, 2: view only
-			."PRIMARY KEY (id));";
-	createTable($db, "vsm_tUser", $sql);
+    $sql = "CREATE TABLE <tablename> ("
+        . "id int NOT NULL auto_increment,"
+        . "sessionID varchar(250),"
+        . "email varchar(100),"
+        . "password varchar(40),"
+        . "passwordDummy varchar(20),"
+        . "salt VARCHAR(5),"
+        . "rights INT(0),"   // 0: admin, 1: leader, 2: view only
+        . "PRIMARY KEY (id));";
+    createTable($db, "vsm_tUser", $sql);
 
-	$sql = "CREATE TABLE <tablename> ("
-			."id int NOT NULL auto_increment,"
-			."userID INT,"
-			."server varchar(10),"
-			."gruppe varchar(10),"
-			."PRIMARY KEY (id));";
-	createTable($db, "vsm_tFilter", $sql);
+    $sql = "CREATE TABLE <tablename> ("
+        . "id int NOT NULL auto_increment,"
+        . "userID INT,"
+        . "server varchar(10),"
+        . "gruppe varchar(10),"
+        . "PRIMARY KEY (id));";
+    createTable($db, "vsm_tFilter", $sql);
 
-	$pw = 'admin';
-	$salt = '28g7d';
-	$pwadd = md5($pw.$salt);
-	$sql = "INSERT INTO vsm_tUser (email, password, salt, rights)
-			VALUES ('admin', '".$pwadd."', '".$salt."', 0);";
+    $pw = 'admin';
+    $salt = base64_decode($_SERVER['APP_KEY']);
+    $pwadd = md5($pw . $salt);
+    $sql = "INSERT INTO vsm_tUser (email, password, salt, rights)
+			VALUES ('admin', '" . $pwadd . "', '" . $salt . "', 0);";
 
-	$db->execute($sql);
-
-
-
+    $db->execute($sql);
 }
-
 
 // Session :
 @ini_set('session.use_only_cookies', 1);
-@ini_set ('session.use_trans_sid', 0);
+@ini_set('session.use_trans_sid', 0);
 
 session_start();
 
-if (!isset($_SESSION['id'])) $_SESSION['id']= md5(microtime());
+if (!isset($_SESSION['id'])) $_SESSION['id'] = md5(microtime());
 
 // Sessions :
 GarbageCollection::updateSessions($db);
 
 // check:
-$sections['login'] = array(true, false);
-$sections['home'] = array(true, false);
-$sections['vip'] = array(true, false);
-$sections['userlist'] = array(true, false);
-$sections['user'] = array(true, false);
+$sections['login'] = [true, false];
+$sections['home'] = [true, false];
+$sections['vip'] = [true, false];
+$sections['userlist'] = [true, false];
+$sections['user'] = [true, false];
 
 $settings['session'] = false;
 $settings['currentPage'] = 'home';
 
-if (isset($_GET['section'])) {
-	if ($sections[$_GET['section']][0]) {
-		$settings['currentPage'] = $_GET['section'];
-		$settings['session'] = $sections[$_GET['section']][1];
-	}
+if (isset($_GET['section']) && $sections[$_GET['section']][0]) {
+    $settings['currentPage'] = $_GET['section'];
+    $settings['session'] = $sections[$_GET['section']][1];
 }
 
 
@@ -124,5 +118,3 @@ if (isset($_GET['section'])) {
 include_once('classUser.php');
 $user = new User($db, $_SESSION['id']);
 
-
-?>
